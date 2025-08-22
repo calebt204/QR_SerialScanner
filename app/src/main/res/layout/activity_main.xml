@@ -38,5 +38,42 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Add"/>
+        </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Row size:"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/decreaseRowSize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="–"/>
+
+        <EditText
+            android:id="@+id/rowSizeInput"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:text="4"
+            android:gravity="center"
+            android:selectAllOnFocus="true"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"/>
+
+        <Button
+            android:id="@+id/increaseRowSize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+"/>
     </LinearLayout>
+
+
 </LinearLayout>

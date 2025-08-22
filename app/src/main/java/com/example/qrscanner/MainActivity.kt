@@ -12,6 +12,7 @@ import android.widget.TextView
 import android.widget.Toast
 import android.widget.EditText
 import android.widget.Button
+import android.widget.NumberPicker
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -34,6 +35,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var resultText: TextView
     private lateinit var manualInput: EditText
     private lateinit var addManualButton: Button
+    private var  rowSize = 4
     private val collectedCodes = mutableSetOf<String>() // store unique values
     private val recentlySavedCodes = mutableSetOf<String>()
     private val cooldownHandler = Handler(Looper.getMainLooper())
@@ -59,10 +61,10 @@ class MainActivity : ComponentActivity() {
                 manualInput.text.clear()
                 resultText.text = collectedCodes.joinToString(", ")
 
-                if (collectedCodes.size >= 4) {
-                    val row = collectedCodes.take(4)
+                if (collectedCodes.size >= rowSize) {
+                    val row = collectedCodes.take(rowSize)
                     saveQRCodesToCsv(row)
-                    Toast.makeText(this, "Saved 4 serial numbers to CSV", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Saved $rowSize serial numbers to CSV", Toast.LENGTH_SHORT).show()
 
                     recentlySavedCodes.addAll(row)
                     collectedCodes.clear()
@@ -75,6 +77,33 @@ class MainActivity : ComponentActivity() {
                 Toast.makeText(this, "Invalid or duplicate entry", Toast.LENGTH_SHORT).show()
             }
         }
+        val rowSizeInput = findViewById<EditText>(R.id.rowSizeInput)
+        val increaseButton = findViewById<Button>(R.id.increaseRowSize)
+        val decreaseButton = findViewById<Button>(R.id.decreaseRowSize)
+
+        fun updateRowSize(newSize: Int) {
+            rowSize = newSize.coerceIn(1, 10) // limits row size between 1 and 10
+            rowSizeInput.setText(rowSize.toString())
+        }
+
+// Increase button
+        increaseButton.setOnClickListener {
+            updateRowSize(rowSize + 1)
+        }
+
+// Decrease button
+        decreaseButton.setOnClickListener {
+            updateRowSize(rowSize - 1)
+        }
+
+// Optional: allow manual typing in EditText
+        rowSizeInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val typed = rowSizeInput.text.toString().toIntOrNull() ?: rowSize
+                updateRowSize(typed)
+            }
+        }
+
 
         checkCameraPermission()
     }
@@ -120,10 +149,10 @@ class MainActivity : ComponentActivity() {
         resultText.text = collectedCodes.joinToString(", ")
 
         // When we have 4 codes, save them
-        if (collectedCodes.size >= 4) {
-            val row = collectedCodes.take(4)
+        if (collectedCodes.size >= rowSize) {
+            val row = collectedCodes.take(rowSize)
             saveQRCodesToCsv(row)
-            Toast.makeText(this, "Saved 4 serial numbers to CSV", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Saved $rowSize serial numbers to CSV", Toast.LENGTH_SHORT).show()
 
             // Move these codes to cooldown set
             recentlySavedCodes.addAll(row)
