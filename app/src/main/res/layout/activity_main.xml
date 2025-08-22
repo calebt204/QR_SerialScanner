@@ -15,4 +15,26 @@
         android:layout_height="wrap_content"
         android:text="Scanned QR codes appear here"
         android:padding="16dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <EditText
+            android:id="@+id/manualInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Enter serial manually"
+            android:inputType="text"
+            android:singleLine="true"/>
+
+        <Button
+            android:id="@+id/addManualButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add"/>
+    </LinearLayout>
 </LinearLayout>

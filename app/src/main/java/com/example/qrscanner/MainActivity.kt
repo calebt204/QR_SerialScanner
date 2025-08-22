@@ -10,6 +10,8 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.EditText
+import android.widget.Button
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -30,6 +32,8 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var previewView: PreviewView
     private lateinit var resultText: TextView
+    private lateinit var manualInput: EditText
+    private lateinit var addManualButton: Button
     private val collectedCodes = mutableSetOf<String>() // store unique values
     private val recentlySavedCodes = mutableSetOf<String>()
     private val cooldownHandler = Handler(Looper.getMainLooper())
@@ -41,6 +45,36 @@ class MainActivity : ComponentActivity() {
 
         previewView = findViewById(R.id.previewView)
         resultText = findViewById(R.id.resultText)
+
+        manualInput = findViewById(R.id.manualInput)
+        addManualButton = findViewById(R.id.addManualButton)
+
+        addManualButton.setOnClickListener {
+            val input = manualInput.text.toString().trim()
+            if (input.isNotEmpty() &&
+                !collectedCodes.contains(input) &&
+                !recentlySavedCodes.contains(input)
+            ) {
+                collectedCodes.add(input)
+                manualInput.text.clear()
+                resultText.text = collectedCodes.joinToString(", ")
+
+                if (collectedCodes.size >= 4) {
+                    val row = collectedCodes.take(4)
+                    saveQRCodesToCsv(row)
+                    Toast.makeText(this, "Saved 4 serial numbers to CSV", Toast.LENGTH_SHORT).show()
+
+                    recentlySavedCodes.addAll(row)
+                    collectedCodes.clear()
+
+                    cooldownHandler.postDelayed({
+                        recentlySavedCodes.removeAll(row)
+                    }, COOLDOWN_MS)
+                }
+            } else {
+                Toast.makeText(this, "Invalid or duplicate entry", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         checkCameraPermission()
     }
