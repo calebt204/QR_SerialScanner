@@ -37,6 +37,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var addManualButton: Button
     private var  rowSize = 4
     private val collectedCodes = mutableSetOf<String>() // store unique values
+    private val collectedCodesOrdered = mutableListOf<String>()
     private val recentlySavedCodes = mutableSetOf<String>()
     private val cooldownHandler = Handler(Looper.getMainLooper())
     private  val COOLDOWN_MS = 3000L // ignore saved codes for 3 seconds
@@ -58,6 +59,7 @@ class MainActivity : ComponentActivity() {
                 !recentlySavedCodes.contains(input)
             ) {
                 collectedCodes.add(input)
+                collectedCodesOrdered.add(input)
                 manualInput.text.clear()
                 resultText.text = collectedCodes.joinToString(", ")
 
@@ -68,6 +70,7 @@ class MainActivity : ComponentActivity() {
 
                     recentlySavedCodes.addAll(row)
                     collectedCodes.clear()
+                    collectedCodesOrdered.clear()
 
                     cooldownHandler.postDelayed({
                         recentlySavedCodes.removeAll(row)
@@ -103,6 +106,19 @@ class MainActivity : ComponentActivity() {
                 updateRowSize(typed)
             }
         }
+        val deleteLastButton = findViewById<Button>(R.id.deleteLastButton)
+
+        deleteLastButton.setOnClickListener {
+            if (collectedCodesOrdered.isNotEmpty()) {
+                val last = collectedCodesOrdered.removeAt(collectedCodesOrdered.lastIndex)
+                collectedCodes.remove(last)
+                resultText.text = collectedCodesOrdered.joinToString(", ")
+                Toast.makeText(this, "Removed: $last", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "No codes to remove", Toast.LENGTH_SHORT).show()
+            }
+        }
+
 
 
         checkCameraPermission()
@@ -142,6 +158,7 @@ class MainActivity : ComponentActivity() {
                 !recentlySavedCodes.contains(serial)
             ) {
                 collectedCodes.add(serial)
+                collectedCodesOrdered.add(serial)
             }
         }
 
@@ -159,6 +176,7 @@ class MainActivity : ComponentActivity() {
 
             // Clear collected codes for next batch
             collectedCodes.clear()
+            collectedCodesOrdered.clear()
 
             // Automatically clear cooldown after COOLDOWN_MS
             cooldownHandler.postDelayed({
