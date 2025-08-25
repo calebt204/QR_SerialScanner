@@ -41,6 +41,8 @@ class MainActivity : ComponentActivity() {
     private val recentlySavedCodes = mutableSetOf<String>()
     private val cooldownHandler = Handler(Looper.getMainLooper())
     private  val COOLDOWN_MS = 3000L // ignore saved codes for 3 seconds
+    private val hexRegex = Regex("^[0-9A-F]{6}$")
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,33 +55,39 @@ class MainActivity : ComponentActivity() {
         addManualButton = findViewById(R.id.addManualButton)
 
         addManualButton.setOnClickListener {
-            val input = manualInput.text.toString().trim()
-            if (input.isNotEmpty() &&
-                !collectedCodes.contains(input) &&
-                !recentlySavedCodes.contains(input)
-            ) {
-                collectedCodes.add(input)
-                collectedCodesOrdered.add(input)
-                manualInput.text.clear()
-                resultText.text = collectedCodes.joinToString(", ")
+            val rawInput = manualInput.text.toString().trim()
+            val input = rawInput.uppercase()
 
-                if (collectedCodes.size >= rowSize) {
-                    val row = collectedCodes.take(rowSize)
-                    saveQRCodesToCsv(row)
-                    Toast.makeText(this, "Saved $rowSize serial numbers to CSV", Toast.LENGTH_SHORT).show()
+            if (!hexRegex.matches(input)) {
+                Toast.makeText(this, "Invalid serial: must be 6-digit hex", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-                    recentlySavedCodes.addAll(row)
-                    collectedCodes.clear()
-                    collectedCodesOrdered.clear()
+            if (collectedCodes.contains(input) || recentlySavedCodes.contains(input)) {
+                Toast.makeText(this, "Duplicate entry", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-                    cooldownHandler.postDelayed({
-                        recentlySavedCodes.removeAll(row)
-                    }, COOLDOWN_MS)
-                }
-            } else {
-                Toast.makeText(this, "Invalid or duplicate entry", Toast.LENGTH_SHORT).show()
+            collectedCodes.add(input)
+            collectedCodesOrdered.add(input)
+            manualInput.text.clear()
+            resultText.text = collectedCodesOrdered.joinToString(", ")
+
+            if (collectedCodes.size >= rowSize) {
+                val row = collectedCodesOrdered.take(rowSize)
+                saveQRCodesToCsv(row)
+                Toast.makeText(this, "Saved $rowSize serial numbers to CSV", Toast.LENGTH_SHORT).show()
+
+                recentlySavedCodes.addAll(row)
+                collectedCodes.clear()
+                collectedCodesOrdered.clear()
+
+                cooldownHandler.postDelayed({
+                    recentlySavedCodes.removeAll(row)
+                }, COOLDOWN_MS)
             }
         }
+
         val rowSizeInput = findViewById<EditText>(R.id.rowSizeInput)
         val increaseButton = findViewById<Button>(R.id.increaseRowSize)
         val decreaseButton = findViewById<Button>(R.id.decreaseRowSize)
@@ -152,8 +160,9 @@ class MainActivity : ComponentActivity() {
 
     private fun handleDetectedCodes(results: List<String>) {
         results.forEach { code ->
-            val serial = code.split(";").firstOrNull()
+            val serial = code.split(";").firstOrNull()?.uppercase()
             if (serial != null &&
+                hexRegex.matches(serial) &&
                 !collectedCodes.contains(serial) &&
                 !recentlySavedCodes.contains(serial)
             ) {
